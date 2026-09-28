@@ -883,7 +883,10 @@ p {
     display: none;
   }
   .hero {
-    padding-top: 22vh;
+    padding-top: 25svh;
+  }
+  .statement {
+    padding-top: 27svh;
   }
   .hero__title {
     font-size: clamp(44px, 12.5vw, 64px);

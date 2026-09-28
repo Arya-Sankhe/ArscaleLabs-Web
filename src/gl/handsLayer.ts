@@ -186,6 +186,8 @@ export class HandsLayer {
   private target: THREE.WebGLRenderTarget;
   private halfHeight = 2.5;
   private halfWidth = 4.4;
+  /** Vertical rig offset, in half-heights, for the hero and centred framings. */
+  private lift = { hero: -0.3, centre: -0.02 };
   private readonly tip = new THREE.Vector3();
   private readonly tipL = new THREE.Vector3();
   private readonly tipR = new THREE.Vector3();
@@ -252,7 +254,7 @@ export class HandsLayer {
     this.camera.aspect = aspect;
     const tan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     // Wide screens frame both forearms; narrow ones crop in on the fingertips.
-    const targetWidth = aspect >= 1.2 ? 6.8 : THREE.MathUtils.mapLinear(Math.max(aspect, 0.45), 0.45, 1.2, 3.1, 6.2);
+    const targetWidth = aspect >= 1.2 ? 6.8 : THREE.MathUtils.mapLinear(Math.max(aspect, 0.45), 0.45, 1.2, 3.0, 6.2);
     const dist = targetWidth / 2 / (tan * aspect);
     this.camera.position.set(0, 0, dist);
     this.camera.lookAt(0, 0, 0);
@@ -268,15 +270,20 @@ export class HandsLayer {
     this.target.setSize(w, h);
     this.composite.uniforms.uRes.value.set(w, h);
     this.composite.uniforms.uDpr.value = dpr;
+    // Phones get a finer matrix so fingers still resolve at a small scale.
     const small = width < 720;
-    this.composite.uniforms.uCell.value.set(small ? 6 : 7, small ? 8 : 9);
+    this.composite.uniforms.uCell.value.set(small ? 3.4 : 7, small ? 4.4 : 9);
+    // Tall screens have room below the copy, so sit the hands lower.
+    const portrait = aspect < 0.8;
+    this.lift = portrait ? { hero: -0.4, centre: -0.2 } : { hero: -0.3, centre: -0.02 };
+    this.centreX = null;
   }
 
   render(renderer: THREE.WebGLRenderer, s: HandsState): void {
     const t = s.time;
     const part = s.part * s.part * (3 - 2 * s.part);
     const spread = part * this.halfWidth * 1.1;
-    const lift = THREE.MathUtils.lerp(-this.halfHeight * 0.3, -this.halfHeight * 0.02, s.centre);
+    const lift = THREE.MathUtils.lerp(this.lift.hero, this.lift.centre, s.centre) * this.halfHeight;
 
     this.rig.position.set(0, lift, 0);
     this.rig.rotation.set(-s.pointer.y * 0.05, s.pointer.x * 0.08, 0);
