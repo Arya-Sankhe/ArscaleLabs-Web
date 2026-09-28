@@ -31,6 +31,9 @@ const back = (t: number) => {
   return 1 + x * x * ((k + 1) * x + k);
 };
 
+/** Wide screens show the split frame on the right with its copy beside it. */
+export const isSideLayout = (width: number, height: number) => width >= 768 && width / height >= 0.9;
+
 export class ProductsLayer {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 1, 60);
@@ -41,6 +44,7 @@ export class ProductsLayer {
   private fit = 1;
   private offsetY = 0.9;
   private flatFit = 1;
+  private sideX = 0;
   private readonly v = new THREE.Vector3();
 
   constructor(labelRoot: HTMLElement) {
@@ -66,9 +70,17 @@ export class ProductsLayer {
     const visH = 2 * this.camera.position.z * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const visW = visH * aspect;
     const narrow = aspect < 0.9;
-    this.fit = Math.min(((narrow ? 0.98 : 0.64) * visW) / 6.3, ((narrow ? 0.42 : 0.5) * visH) / 3.1);
-    this.flatFit = Math.min(((narrow ? 0.92 : 0.5) * visW) / 3.9, ((narrow ? 0.4 : 0.48) * visH) / 2.7);
-    this.offsetY = visH * (narrow ? 0.1 : 0.085);
+    if (isSideLayout(width, height)) {
+      this.fit = Math.min((0.56 * visW) / 6.3, (0.6 * visH) / 3.1);
+      this.flatFit = Math.min((0.5 * visW) / 3.9, (0.58 * visH) / 2.7);
+      this.offsetY = 0;
+      this.sideX = visW * 0.2;
+    } else {
+      this.fit = Math.min(((narrow ? 0.98 : 0.64) * visW) / 6.3, ((narrow ? 0.42 : 0.5) * visH) / 3.1);
+      this.flatFit = Math.min(((narrow ? 0.92 : 0.5) * visW) / 3.9, ((narrow ? 0.4 : 0.48) * visH) / 2.7);
+      this.offsetY = visH * (narrow ? 0.1 : 0.085);
+      this.sideX = 0;
+    }
     for (const p of this.products) p.setResolution(width * dpr, height * dpr);
   }
 
@@ -89,7 +101,7 @@ export class ProductsLayer {
 
       const fit = THREE.MathUtils.lerp(this.flatFit, this.fit, sp);
       p.root.scale.setScalar(fit * (0.94 + 0.06 * e));
-      p.root.position.set(0, this.offsetY - (1 - e) * 0.25 + x * 0.35, 0);
+      p.root.position.set(this.sideX * smooth(split / 0.55), this.offsetY - (1 - e) * 0.25 + x * 0.35, 0);
       const idle = Math.sin(s.time * 0.21 + i) * 0.025;
       p.root.rotation.set(
         THREE.MathUtils.lerp(-s.pointer.y * 0.03, 0.07 - s.pointer.y * 0.04, sp) + (1 - e) * 0.12,

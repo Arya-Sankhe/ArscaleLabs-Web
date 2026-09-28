@@ -3,6 +3,7 @@ import { mountCompare } from './compare';
 import { mountFooterMark } from './footerMark';
 import { mountForge } from './forge';
 import { Engine } from './gl/engine';
+import { isSideLayout } from './gl/productsLayer';
 import './styles.css';
 
 const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
@@ -64,8 +65,11 @@ window.addEventListener(
 );
 
 let vh = window.innerHeight;
+let side = false;
 function resize() {
   vh = stage.querySelector<HTMLElement>('.stage__sticky')!.clientHeight;
+  side = isSideLayout(canvas.clientWidth, canvas.clientHeight);
+  $('#systems').classList.toggle('is-side', side);
   engine?.resize(canvas.clientWidth, canvas.clientHeight);
 }
 window.addEventListener('resize', resize);
@@ -153,13 +157,14 @@ function frame(now: number) {
   let active = -1;
   systems.forEach((el, i) => {
     const w = T.systems[i];
-    const inT = smooth(span(s, [w.enter[1] - 45, w.enter[1] + 5]));
+    // Side by side, the copy waits for the frame to split and move over.
+    const inT = smooth(span(s, side ? [w.split[0] + 28, w.split[1]] : [w.enter[1] - 45, w.enter[1] + 5]));
     const outT = smooth(span(s, [w.exit[0], w.exit[0] + 30]));
     const o = inT * (1 - outT);
     setLayer(el, o, (1 - inT) * 20 - outT * 24);
     if (o > 0.5) active = i;
   });
-  const indexO = smooth(span(s, [290, 330])) * (1 - smooth(span(s, T.indexOut)));
+  const indexO = smooth(span(s, side ? [350, 395] : [290, 330])) * (1 - smooth(span(s, T.indexOut)));
   index.style.opacity = indexO.toFixed(3);
   indexItems.forEach((li, i) => li.classList.toggle('is-active', i === active));
 
