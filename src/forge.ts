@@ -187,5 +187,6 @@ export function mountForge(canvas: HTMLCanvasElement): void {
   new DiamondField(canvas, {
     cell: (w) => (w < 768 ? [7, 9] : [8, 10]),
     sample,
+    alwaysAnimate: true,
   });
 }

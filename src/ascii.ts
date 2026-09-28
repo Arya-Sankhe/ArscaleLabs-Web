@@ -19,6 +19,8 @@ export interface FieldOptions {
   /** Fill `out` (cols × rows, row-major) with brightness 0..1. */
   sample: (grid: Grid, time: number, out: Float32Array) => void;
   onResize?: (grid: Grid) => void;
+  /** Keep animating even when the user prefers reduced motion. */
+  alwaysAnimate?: boolean;
 }
 
 const LEVELS = 6;
@@ -44,8 +46,9 @@ export class DiamondField {
     this.ctx = ctx;
     new ResizeObserver(() => this.resize()).observe(canvas);
     new IntersectionObserver(
-      ([entry]) => {
-        this.visible = entry.isIntersecting;
+      (entries) => {
+        // Fast scrolling can batch several changes; only the latest is current.
+        this.visible = entries[entries.length - 1].isIntersecting;
         if (this.visible && !this.raf) {
           this.last = performance.now();
           this.raf = requestAnimationFrame(this.frame);
@@ -77,16 +80,20 @@ export class DiamondField {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     if (this.start < 0) this.start = now;
-    if (!this.still.matches) this.time += dt;
+    if (!this.isStill()) this.time += dt;
     this.draw();
     this.raf = this.visible ? requestAnimationFrame(this.frame) : 0;
   };
+
+  private isStill(): boolean {
+    return this.still.matches && !this.opts.alwaysAnimate;
+  }
 
   private draw(): void {
     const { ctx, grid, values } = this;
     const { cols, rows, cw, ch, width, height } = grid;
     values.fill(0);
-    this.opts.sample(grid, this.still.matches ? 4 : this.time, values);
+    this.opts.sample(grid, this.isStill() ? 4 : this.time, values);
 
     ctx.clearRect(0, 0, width, height);
     const ox = (width - cols * cw) / 2;

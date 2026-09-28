@@ -187,7 +187,7 @@ function frame(now: number) {
 
 mountCompare($('#compare'));
 
-new IntersectionObserver(([entry]) => document.documentElement.classList.toggle('at-footer', entry.isIntersecting), {
+new IntersectionObserver((entries) => document.documentElement.classList.toggle('at-footer', entries[entries.length - 1].isIntersecting), {
   threshold: 0.35,
 }).observe($('#contact'));
 
