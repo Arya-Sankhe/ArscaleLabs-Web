@@ -127,7 +127,7 @@ export class CrmProduct extends Product {
     const main = this.disc(0.03);
     this.tokens.push({ mesh: main, path: [HUBS[0], HUBS[1], HUBS[2]], speed: 0.14, offset: 0 });
 
-    this.label('ACME INDUSTRIAL', [HUBS[0][0] - 0.2, HUBS[0][1] + 0.26, Z[0]], 0.5, { tone: 'bright' });
+    this.label('ARCSCALE', [HUBS[0][0] - 0.2, HUBS[0][1] + 0.26, Z[0]], 0.5, { tone: 'bright' });
     this.label('INTENT 0.92', [FOCUS_CARD[0] - 0.42, FOCUS_CARD[1] + 0.26, Z[1]], 0.6, { tone: 'bright' });
     this.label('QUALIFY → PROPOSAL', [0.05, -1.3, Z[1]], 0.65);
     this.label('92', [RING[0] - 0.1, RING[1] - 0.04, Z[2]], 0.7, { tone: 'bright' });

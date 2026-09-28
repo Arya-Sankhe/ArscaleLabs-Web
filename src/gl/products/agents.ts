@@ -134,7 +134,7 @@ export class AgentsProduct extends Product {
     });
 
     this.label('PLAN', [NODES.plan[0] - 0.28, NODES.plan[1] + 0.26, Z[0]], 0.5, { tone: 'bright' });
-    this.label('TOOL · ERP.LOOKUP', [NODES.erp[0] - 0.28, NODES.erp[1] - 0.26, Z[0]], 0.56);
+    this.label('TOOL · ANY SYSTEM', [NODES.erp[0] - 0.28, NODES.erp[1] - 0.26, Z[0]], 0.56);
     this.label('SELF-CHECK', [0.0, 1.1, Z[0]], 0.6);
     this.label('AGENT', [-1.72, 0.44, Z[1]], 0.62);
     this.label('TRACE 0.84S', [-1.7, 1.18, Z[2]], 0.7);

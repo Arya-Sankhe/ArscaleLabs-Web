@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { mountCompare } from './compare';
+import { mountFooterMark } from './footerMark';
+import { mountForge } from './forge';
 import { Engine } from './gl/engine';
 import './styles.css';
 
@@ -7,9 +10,7 @@ const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelect
 const stage = $('#stage');
 const canvas = $<HTMLCanvasElement>('#gl');
 const hero = $('#hero');
-const hud = $('#hud');
 const statement = $('#statement');
-const clock = $('#clock');
 const systems = [...document.querySelectorAll<HTMLElement>('.system')];
 const index = $('.system-index');
 const indexItems = [...index.querySelectorAll<HTMLElement>('li')];
@@ -17,9 +18,12 @@ const indexItems = [...index.querySelectorAll<HTMLElement>('li')];
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /*
- * Timeline in viewport-heights scrolled into the stage. The stage is
- * 880vh tall, so there are 780vh of pinned scroll.
+ * Timeline in units of 1/PACE viewport-heights scrolled into the stage. It
+ * spans 1020 units, so with PACE 0.6 the stage is 100 + 612 = 712vh tall
+ * (keep in sync with `.stage` in styles.css). Each system draws on as one
+ * flat frame, holds, then breaks into its three planes.
  */
+const PACE = 0.6;
 const T = {
   heroOut: [8, 70],
   morph: [16, 125],
@@ -30,10 +34,11 @@ const T = {
   handsOut: [235, 295],
   stars: [200, 300],
   systems: [
-    { enter: [225, 325], exit: [405, 455] },
-    { enter: [440, 530], exit: [600, 650] },
-    { enter: [635, 725], exit: [900, 901] },
+    { enter: [225, 305], split: [330, 395], exit: [465, 515] },
+    { enter: [500, 580], split: [605, 670], exit: [740, 790] },
+    { enter: [775, 855], split: [880, 945], exit: [5000, 5001] },
   ],
+  indexOut: [995, 1015],
 } as const;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -67,12 +72,52 @@ window.addEventListener('resize', resize);
 resize();
 
 function scrolledVh(): number {
-  return (-stage.getBoundingClientRect().top / vh) * 100;
+  return (-stage.getBoundingClientRect().top / vh) * (100 / PACE);
 }
+
+let glide = 0;
+const stopGlide = () => cancelAnimationFrame(glide);
+for (const ev of ['wheel', 'touchstart', 'keydown'] as const) window.addEventListener(ev, stopGlide, { passive: true });
+
+/** An eased scroll slow enough for the story in between to play out. */
+function glideTo(top: number) {
+  stopGlide();
+  const from = window.scrollY;
+  const dist = top - from;
+  if (reduceMotion.matches || Math.abs(dist) < 2) {
+    window.scrollTo(0, top);
+    return;
+  }
+  const duration = Math.min(2600, 1200 + Math.abs(dist) * 0.3);
+  const start = performance.now();
+  const step = (now: number) => {
+    const t = Math.min(1, (now - start) / duration);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    window.scrollTo(0, from + dist * e);
+    if (t < 1) glide = requestAnimationFrame(step);
+  };
+  glide = requestAnimationFrame(step);
+}
+
+/** Scrolls so system `i` is fully split open. */
+function jumpTo(i: number) {
+  glideTo(stage.getBoundingClientRect().top + window.scrollY + (T.systems[i].split[1] / 100) * PACE * vh);
+}
+$('#cue').addEventListener('click', (e) => {
+  e.preventDefault();
+  jumpTo(0);
+});
+document.querySelectorAll<HTMLElement>('[data-jump]').forEach((a) =>
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    jumpTo(Number(a.dataset.jump));
+  }),
+);
 
 let s = scrolledVh();
 let last = performance.now();
 let elapsed = 0;
+let handTime = 0;
 let introStart = -1;
 
 function setLayer(el: HTMLElement, opacity: number, lift: number) {
@@ -85,21 +130,26 @@ function frame(now: number) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const still = reduceMotion.matches;
-  if (!still) elapsed += dt;
 
   const target = scrolledVh();
   s = still ? target : s + (target - s) * (1 - Math.exp(-dt * 9));
   pointer.lerp(still ? pointerTarget.set(0, 0) : pointerTarget, 1 - Math.exp(-dt * 3));
 
+  const morph = span(s, T.morph);
+  if (!still) {
+    elapsed += dt;
+    // The wireframe hands move with more life than the resting matrix.
+    handTime += dt * (1 + 0.9 * smooth(morph));
+  }
+
   const heroOut = smooth(span(s, T.heroOut));
   setLayer(hero, 1 - heroOut, -heroOut * 48);
-  hud.style.opacity = (1 - smooth(span(s, [4, 40]))).toFixed(3);
 
   const stIn = smooth(span(s, T.statementIn));
   const stOut = smooth(span(s, T.statementOut));
   setLayer(statement, stIn * (1 - stOut), (1 - stIn) * 24 - stOut * 40);
 
-  const phases = T.systems.map((w) => ({ enter: span(s, w.enter), exit: span(s, w.exit) }));
+  const phases = T.systems.map((w) => ({ enter: span(s, w.enter), split: span(s, w.split), exit: span(s, w.exit) }));
   let active = -1;
   systems.forEach((el, i) => {
     const w = T.systems[i];
@@ -109,21 +159,18 @@ function frame(now: number) {
     setLayer(el, o, (1 - inT) * 20 - outT * 24);
     if (o > 0.5) active = i;
   });
-  const indexO = smooth(span(s, [290, 330])) * (1 - smooth(span(s, [760, 780])));
+  const indexO = smooth(span(s, [290, 330])) * (1 - smooth(span(s, T.indexOut)));
   index.style.opacity = indexO.toFixed(3);
   indexItems.forEach((li, i) => li.classList.toggle('is-active', i === active));
 
-  const secs = Math.floor(elapsed);
-  clock.textContent = `T+${String(Math.floor(secs / 3600)).padStart(2, '0')}:${String(Math.floor(secs / 60) % 60).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`;
-
-  if (engine && s < 900) {
+  if (engine && stage.getBoundingClientRect().bottom > 0) {
     if (introStart < 0) introStart = now;
     const intro = still ? 1 : clamp01((now - introStart - 250) / 2200);
     const handsOut = smooth(span(s, T.handsOut));
     engine.render({
       hands: {
-        time: still ? 2 : elapsed,
-        morph: span(s, T.morph),
+        time: still ? 2 : handTime,
+        morph,
         intro: 1 - Math.pow(1 - intro, 2),
         alpha: 1 - handsOut,
         stars: (1 - 0.6 * smooth(span(s, T.stars))) * smooth(intro),
@@ -136,6 +183,39 @@ function frame(now: number) {
   }
 
   requestAnimationFrame(frame);
+}
+
+mountCompare($('#compare'));
+
+new IntersectionObserver(([entry]) => document.documentElement.classList.toggle('at-footer', entry.isIntersecting), {
+  threshold: 0.35,
+}).observe($('#contact'));
+
+try {
+  mountForge($<HTMLCanvasElement>('#forge'));
+  mountFooterMark($<HTMLCanvasElement>('#footer-canvas'));
+} catch {
+  document.documentElement.classList.add('no-canvas');
+}
+
+const BUILDS = [
+  'Document intelligence',
+  'Visual quality inspection',
+  'Voice agents',
+  'Pricing engines',
+  'Knowledge copilots',
+];
+const ticker = $('#ticker');
+let build = 0;
+if (!reduceMotion.matches) {
+  setInterval(() => {
+    ticker.classList.add('is-out');
+    setTimeout(() => {
+      build = (build + 1) % BUILDS.length;
+      ticker.textContent = BUILDS[build];
+      ticker.classList.remove('is-out');
+    }, 320);
+  }, 2600);
 }
 
 document.fonts.ready.then(() => document.documentElement.classList.add('is-ready'));

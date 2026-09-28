@@ -31,7 +31,7 @@ export interface HandSpec {
 }
 
 const FINGER_RINGS = 30;
-const FINGER_CAP = 6;
+const FINGER_CAP = 8;
 const ARM_RINGS = 74;
 const ARM_CAP = 6;
 
@@ -164,6 +164,8 @@ export class Hand {
         const dj = (s - cum[j]) / 0.045;
         r *= 1 + 0.07 * Math.exp(-dj * dj);
       }
+      const pad = (s - (total - d.lens[2] * 0.35)) / (d.lens[2] * 0.3);
+      r *= 1 + 0.08 * Math.exp(-pad * pad);
       const seg = s < cum[2] ? 0 : s < cum[3] ? 1 : 2;
       const segT = THREE.MathUtils.clamp((s - cum[seg + 1]) / (cum[seg + 2] - cum[seg + 1] || 1), 0, 1);
       const up = ups[seg].clone().lerp(ups[Math.min(seg + 1, 2)], segT * 0.5).normalize();
@@ -178,7 +180,7 @@ export class Hand {
         u: s - back,
       });
     }
-    appendCap(rings, FINGER_CAP, d.radii[3] * 0.95);
+    appendCap(rings, FINGER_CAP, d.radii[3] * 0.88);
     return rings;
   }
 }

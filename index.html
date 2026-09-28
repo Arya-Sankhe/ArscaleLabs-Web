@@ -14,7 +14,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
@@ -65,85 +68,62 @@
 
     <a class="skip" href="#main">Skip to content</a>
 
-    <header class="nav" data-intro="0">
-      <div class="nav__inner">
-        <a class="brand" href="#" aria-label="Arcscale Labs — home">
-          <svg class="brand__mark" aria-hidden="true"><use href="#wordmark" /></svg>
-          <span class="brand__labs" aria-hidden="true">LABS</span>
-        </a>
-        <span class="nav__rule" aria-hidden="true"></span>
-        <nav class="nav__links" aria-label="Primary">
-          <a href="#systems">Systems</a>
-          <a href="#capabilities">Capabilities</a>
-          <a href="#process">Process</a>
-          <a href="#contact">Contact</a>
-        </nav>
-        <a class="btn btn--ghost nav__cta" href="#contact"><span class="dot" aria-hidden="true"></span>Let’s talk</a>
-      </div>
+    <header class="chrome">
+      <a class="brand" href="#top" aria-label="Arcscale Labs — home" data-intro="0">
+        <svg class="brand__mark" aria-hidden="true"><use href="#wordmark" /></svg>
+        <span class="brand__labs" aria-hidden="true">LABS</span>
+      </a>
+      <a class="touch" href="#contact" data-intro="0">
+        <span>Get in touch</span>
+        <svg class="touch__arrow" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+          <path d="M3 9L9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.3" />
+        </svg>
+      </a>
     </header>
 
     <main id="main">
       <section class="stage" id="stage" aria-label="Arcscale Labs">
-        <div class="stage__sticky">
+        <div class="stage__sticky" id="top">
           <canvas id="gl" aria-hidden="true"></canvas>
           <div class="wf-labels" id="labels" aria-hidden="true"></div>
 
           <div class="hero" id="hero">
-            <p class="badge" data-intro="1"><span class="dot" aria-hidden="true"></span>Now scoping Q4 2026 engagements</p>
-            <h1 class="hero__title">
+            <h1 class="hero__title display">
               <span class="line" data-intro="2">Building systems</span>
-              <span class="line" data-intro="3">of the Future, Today.</span>
+              <span class="line" data-intro="3">of the <em>Future</em>, Today.</span>
             </h1>
-            <p class="hero__sub" data-intro="4">
-              Custom AI for enterprises that can’t afford to guess — designed, built and run by one accountable team.
-            </p>
-            <div class="hero__actions" data-intro="5">
-              <a class="btn btn--pill" href="#contact">Start a brief <span aria-hidden="true">↗</span></a>
-              <a class="btn btn--ghost" href="#systems">View systems <span aria-hidden="true">↓</span></a>
-            </div>
-          </div>
-
-          <div class="hud" id="hud" aria-hidden="true">
-            <div class="hud__fig" data-intro="6">
-              <span>FIG. 01</span>
-              <span class="hud__rule"></span>
-              <span>HUMAN / SYSTEM INTERFACE</span>
-            </div>
-            <div class="hud__clock" data-intro="6"><span class="dot"></span><span id="clock">T+00:00:00</span></div>
-            <a class="scroll-prompt" href="#systems" data-intro="7" tabindex="-1">
-              <span>Scroll to explore</span>
-              <span class="scroll-prompt__box">
-                <svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+            <a class="cue" href="#systems" id="cue" data-intro="4">
+              <span>Explore our solutions</span>
+              <span class="cue__icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="12" height="12"><path d="M8 3v10M4 9l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
               </span>
             </a>
           </div>
 
           <div class="statement" id="statement">
-            <p class="eyebrow">What we build</p>
-            <h2 class="statement__title">Custom AI, engineered like&nbsp;infrastructure.</h2>
-            <p class="statement__body">Three systems we deploy inside the enterprise. Each one is scoped to your data, measured against your numbers and owned by the team that built it.</p>
+            <h2 class="statement__title display">Custom AI for enterprises that can’t afford to&nbsp;<em>guess</em>.</h2>
           </div>
 
           <div class="systems" id="systems">
             <article class="system" data-system="0">
               <p class="eyebrow"><span class="system__num">01</span> Machine intelligence</p>
-              <h3 class="system__title">Live machine analysis.</h3>
+              <h3 class="system__title display">Live machine analysis.</h3>
               <p class="system__body">
-                Streams telemetry from every asset, traces the fault behind the symptom and tells operators what to fix first — before the line stops.
+                Catches failures before a machine breaks down, and walks your team to the fix in minutes — not the hours or days it takes today.
               </p>
             </article>
             <article class="system" data-system="1">
               <p class="eyebrow"><span class="system__num">02</span> AI-native CRM</p>
-              <h3 class="system__title">A CRM that reads the room.</h3>
+              <h3 class="system__title display">A CRM that thinks ahead.</h3>
               <p class="system__body">
                 Every email, call and ticket becomes signal. Intent is scored per account, the pipeline forecasts itself and each rep gets the next best move.
               </p>
             </article>
             <article class="system" data-system="2">
               <p class="eyebrow"><span class="system__num">03</span> Agentic workflows</p>
-              <h3 class="system__title">Agents that do the work.</h3>
+              <h3 class="system__title display">Agents that do the work.</h3>
               <p class="system__body">
-                Ask in plain language. Agents plan, call your ERP and CRM, check their own output and hand back a decision — every step traced.
+                Describe the outcome. Agents plan the steps, work across your entire stack, check their own output and report back — every step traced.
               </p>
             </article>
 
@@ -156,35 +136,94 @@
         </div>
       </section>
 
-      <footer class="footer" id="contact">
-        <div class="footer__inner">
-          <div class="footer__brand">
-            <svg class="footer__mark" aria-label="Arcscale Labs"><use href="#wordmark" /></svg>
-            <p class="footer__labs" aria-hidden="true">L A B S</p>
-            <p class="footer__tagline">Building systems of the Future, Today.</p>
-          </div>
-          <div class="footer__cols">
-            <div>
-              <p class="eyebrow">Start</p>
-              <a class="btn btn--pill" href="mailto:hello@arcscalelabs.com">Start a brief <span aria-hidden="true">↗</span></a>
-            </div>
-            <div>
-              <p class="eyebrow">Contact</p>
-              <a href="mailto:hello@arcscalelabs.com">hello@arcscalelabs.com</a>
-            </div>
-            <div>
-              <p class="eyebrow">Systems</p>
-              <a href="#systems">Machine intelligence</a>
-              <a href="#systems">AI-native CRM</a>
-              <a href="#systems">Agentic workflows</a>
-            </div>
+      <section class="compare" id="compare" aria-labelledby="compare-title">
+        <div class="compare__inner">
+          <header class="compare__head">
+            <h2 class="compare__title display" id="compare-title">Three systems. <em>Built</em> to run in production.</h2>
+          </header>
+          <div class="compare__grid">
+            <article class="card" data-kind="machine">
+              <div class="card__art" aria-hidden="true"></div>
+              <p class="card__num eyebrow"><span>01</span> Machine intelligence</p>
+              <h3 class="card__title">Live machine analysis</h3>
+              <dl class="card__rows">
+                <div><dt>Reads</dt><dd>Sensors, PLCs, maintenance logs</dd></div>
+                <div><dt>Delivers</dt><dd>Early fault alerts and guided fixes</dd></div>
+                <div><dt>Outcome</dt><dd>Fewer breakdowns, repairs in minutes</dd></div>
+              </dl>
+            </article>
+            <article class="card" data-kind="crm">
+              <div class="card__art" aria-hidden="true"></div>
+              <p class="card__num eyebrow"><span>02</span> AI-native CRM</p>
+              <h3 class="card__title">A CRM that thinks ahead</h3>
+              <dl class="card__rows">
+                <div><dt>Reads</dt><dd>Email, calls, tickets, product usage</dd></div>
+                <div><dt>Delivers</dt><dd>Intent scores and the next best move</dd></div>
+                <div><dt>Outcome</dt><dd>Shorter cycles, sharper forecasts</dd></div>
+              </dl>
+            </article>
+            <article class="card" data-kind="agents">
+              <div class="card__art" aria-hidden="true"></div>
+              <p class="card__num eyebrow"><span>03</span> Agentic workflows</p>
+              <h3 class="card__title">Agents that do the work</h3>
+              <dl class="card__rows">
+                <div><dt>Reads</dt><dd>Your tools, documents and data</dd></div>
+                <div><dt>Delivers</dt><dd>Work done end to end, fully traced</dd></div>
+                <div><dt>Outcome</dt><dd>Hours of operations, handled</dd></div>
+              </dl>
+            </article>
           </div>
         </div>
+      </section>
+
+      <section class="custom" id="custom" aria-labelledby="custom-title">
+        <canvas class="custom__canvas" id="forge" aria-hidden="true"></canvas>
+        <div class="custom__inner">
+          <p class="eyebrow">04 &nbsp;Custom systems</p>
+          <h2 class="custom__title display" id="custom-title">If you can describe it,<br /><em>we can build it.</em></h2>
+          <p class="custom__body">
+            We design AI around your data, your stack and the problem only your company has.
+          </p>
+          <p class="custom__ticker eyebrow" aria-live="off">
+            <span class="custom__ticker-k">Recently built</span>
+            <span class="custom__ticker-v" id="ticker">Document intelligence</span>
+          </p>
+          <a class="btn btn--pill" href="mailto:arya@arcscalelabs.com">Tell us what to build <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer" id="contact">
+      <div class="footer__inner">
+        <div class="footer__top">
+          <div class="footer__lead">
+            <p class="eyebrow"><span class="dot" aria-hidden="true"></span>Get in touch</p>
+            <h2 class="footer__title display">Bring us the problem. We’ll <em>figure it out</em> together.</h2>
+          </div>
+          <div class="footer__contact">
+            <a class="btn btn--pill" href="mailto:arya@arcscalelabs.com">Start a conversation <span aria-hidden="true">↗</span></a>
+            <a class="footer__mail" href="mailto:arya@arcscalelabs.com">arya@arcscalelabs.com</a>
+          </div>
+        </div>
+
+        <div class="footer__mark" id="footer-mark">
+          <canvas class="footer__canvas" id="footer-canvas" aria-hidden="true"></canvas>
+          <svg class="footer__fallback" aria-label="Arcscale Labs"><use href="#wordmark" /></svg>
+          <p class="footer__labs" aria-hidden="true">L A B S</p>
+        </div>
+
         <div class="footer__base">
           <span>© 2026 Arcscale Labs</span>
-          <span>Systems atelier · Built in orbit</span>
+          <nav class="footer__links" aria-label="Footer">
+            <a href="#systems" data-jump="0">Machine intelligence</a>
+            <a href="#systems" data-jump="1">AI-native CRM</a>
+            <a href="#systems" data-jump="2">Agentic workflows</a>
+            <a href="#custom">Custom systems</a>
+          </nav>
+          <span>Building systems of the Future, Today.</span>
         </div>
-      </footer>
+      </div>
+    </footer>
     </main>
 
     <script type="module" src="/src/main.ts"></script>

@@ -15,11 +15,34 @@ export interface Label {
   side?: 'left' | 'right';
 }
 
+/** Lines behind this local depth belong to the middle and back planes. */
+const FRONT_CUT = Z[0] - 0.4;
+
+/** Multiplies the alpha of everything behind the front plane by `uBehind`. */
+function fadeBehind(material: LineMaterial, uniform: { value: number }): void {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uBehind = uniform;
+    shader.vertexShader = shader.vertexShader.replace(
+      'void main() {',
+      'varying float vPlaneZ;\nvoid main() {\n  vPlaneZ = position.y < 0.5 ? instanceStart.z : instanceEnd.z;',
+    );
+    shader.fragmentShader = shader.fragmentShader
+      .replace('void main() {', 'uniform float uBehind;\nvarying float vPlaneZ;\nvoid main() {')
+      .replace(
+        'vec4 diffuseColor = vec4( diffuse, alpha );',
+        `alpha *= mix(uBehind, 1.0, smoothstep(${(FRONT_CUT - 0.3).toFixed(2)}, ${FRONT_CUT.toFixed(2)}, vPlaneZ));\n  vec4 diffuseColor = vec4( diffuse, alpha );`,
+      );
+  };
+  material.customProgramCacheKey = () => 'fade-behind';
+}
+
 export abstract class Product {
   /** Placement, rotation and scale; owned by the stage. */
   readonly root = new THREE.Group();
   /** Scaled along Z to fold the planes together on enter and exit. */
   readonly stack = new THREE.Group();
+  /** 0 shows only the front plane, 1 shows all three. */
+  private readonly behind = { value: 1 };
   readonly materials: Record<Style, LineMaterial> = createMaterials();
   readonly labels: Label[] = [];
   protected readonly sketch = new Sketch();
@@ -36,6 +59,7 @@ export abstract class Product {
 
   constructor() {
     this.root.add(this.stack);
+    for (const s of STYLES) fadeBehind(this.materials[s], this.behind);
     this.baseOpacity = Object.fromEntries(STYLES.map((s) => [s, this.materials[s].opacity])) as Record<Style, number>;
   }
 
@@ -48,6 +72,7 @@ export abstract class Product {
   /** `own` gives the lines a private material so `fade` can dim them alone. */
   protected live(capacity: number, style: Style, own = false): LiveLines {
     const material = own ? this.materials[style].clone() : this.materials[style];
+    if (own) fadeBehind(material, this.behind);
     const lines = new LiveLines(capacity, material);
     if (own) this.owned.push({ lines, material, style });
     this.stack.add(lines.line);
@@ -81,9 +106,10 @@ export abstract class Product {
     for (const o of this.owned) o.material.opacity = this.baseOpacity[o.style] * this.alpha * o.lines.fade;
   }
 
-  /** `reveal` draws lines on; `alpha` fades everything. */
-  apply(reveal: number, alpha: number): void {
+  /** `reveal` draws lines on; `alpha` fades everything; `behind` fades the rear planes. */
+  apply(reveal: number, alpha: number, behind: number): void {
     this.alpha = alpha;
+    this.behind.value = behind;
     this.sketch.reveal(reveal);
     for (const s of STYLES) this.materials[s].opacity = this.baseOpacity[s] * alpha;
     const live = THREE.MathUtils.clamp((reveal - 0.55) / 0.35, 0, 1);

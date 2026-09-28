@@ -40,6 +40,8 @@ void main() {
   float lum = 0.62 * pow(wrap, 1.4) + 0.4 * pow(facing, 1.3);
   lum *= mix(0.45, 1.0, smoothstep(0.0, 0.45, facing));
   lum += 0.2 * pow(max(dot(reflect(-L, N), V), 0.0), 10.0);
+  // Soft fill from below so the undersides of curled fingers still read.
+  lum += 0.26 * clamp(dot(N, normalize(vec3(0.25, -0.7, 0.65))), 0.0, 1.0);
 
   float depth = clamp((-vView.z - uDepthRange.x) / (uDepthRange.y - uDepthRange.x), 0.0, 1.0);
 
@@ -267,7 +269,7 @@ export class HandsLayer {
     this.composite.uniforms.uRes.value.set(w, h);
     this.composite.uniforms.uDpr.value = dpr;
     const small = width < 720;
-    this.composite.uniforms.uCell.value.set(small ? 6 : 8, small ? 8 : 11);
+    this.composite.uniforms.uCell.value.set(small ? 6 : 7, small ? 8 : 9);
   }
 
   render(renderer: THREE.WebGLRenderer, s: HandsState): void {

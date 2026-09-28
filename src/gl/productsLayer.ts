@@ -5,8 +5,10 @@ import { MachineProduct } from './products/machine';
 import type { Product } from './products/product';
 
 export interface ProductPhase {
-  /** 0..1 while the illustration assembles. */
+  /** 0..1 while the illustration draws on as one flat, front-facing frame. */
   enter: number;
+  /** 0..1 while the frame turns and breaks into its three planes. */
+  split: number;
   /** 0..1 while it folds away. */
   exit: number;
 }
@@ -22,6 +24,12 @@ const smooth = (t: number) => {
   const x = THREE.MathUtils.clamp(t, 0, 1);
   return x * x * (3 - 2 * x);
 };
+/** Ease-out with a small overshoot, so the planes spring apart. */
+const back = (t: number) => {
+  const x = THREE.MathUtils.clamp(t, 0, 1) - 1;
+  const k = 1.6;
+  return 1 + x * x * ((k + 1) * x + k);
+};
 
 export class ProductsLayer {
   private readonly scene = new THREE.Scene();
@@ -32,6 +40,7 @@ export class ProductsLayer {
   private height = 1;
   private fit = 1;
   private offsetY = 0.9;
+  private flatFit = 1;
   private readonly v = new THREE.Vector3();
 
   constructor(labelRoot: HTMLElement) {
@@ -58,6 +67,7 @@ export class ProductsLayer {
     const visW = visH * aspect;
     const narrow = aspect < 0.9;
     this.fit = Math.min(((narrow ? 0.98 : 0.64) * visW) / 6.3, ((narrow ? 0.42 : 0.5) * visH) / 3.1);
+    this.flatFit = Math.min(((narrow ? 0.92 : 0.5) * visW) / 3.9, ((narrow ? 0.4 : 0.48) * visH) / 2.7);
     this.offsetY = visH * (narrow ? 0.1 : 0.085);
     for (const p of this.products) p.setResolution(width * dpr, height * dpr);
   }
@@ -69,21 +79,24 @@ export class ProductsLayer {
 
   render(renderer: THREE.WebGLRenderer, s: ProductsState): void {
     this.products.forEach((p, i) => {
-      const { enter, exit } = s.phases[i];
+      const { enter, split, exit } = s.phases[i];
       const e = ease(enter);
+      const sp = smooth(split);
       const x = smooth(exit);
       const alpha = smooth(enter * 1.6) * (1 - x);
-      p.apply(enter, alpha);
+      p.apply(enter, alpha, smooth(split / 0.45));
       if (!p.root.visible) return;
 
-      p.root.scale.setScalar(this.fit * (0.94 + 0.06 * e));
+      const fit = THREE.MathUtils.lerp(this.flatFit, this.fit, sp);
+      p.root.scale.setScalar(fit * (0.94 + 0.06 * e));
       p.root.position.set(0, this.offsetY - (1 - e) * 0.25 + x * 0.35, 0);
+      const idle = Math.sin(s.time * 0.21 + i) * 0.025;
       p.root.rotation.set(
-        0.07 - s.pointer.y * 0.04 + (1 - e) * 0.12,
-        -0.74 + (1 - e) * 0.5 - x * 0.5 + s.pointer.x * 0.06 + Math.sin(s.time * 0.21 + i) * 0.025,
-        0.02,
+        THREE.MathUtils.lerp(-s.pointer.y * 0.03, 0.07 - s.pointer.y * 0.04, sp) + (1 - e) * 0.12,
+        THREE.MathUtils.lerp(s.pointer.x * 0.04, -0.74 + s.pointer.x * 0.06 + idle, sp) + (1 - e) * 0.18 - x * 0.5,
+        0.02 * sp,
       );
-      p.stack.scale.z = 0.05 + 0.95 * e * (1 - 0.92 * x);
+      p.stack.scale.z = 0.015 + 0.985 * back(split) * (1 - 0.92 * x);
       p.tick(s.time);
       p.applyFades();
     });
@@ -96,8 +109,8 @@ export class ProductsLayer {
     this.scene.updateMatrixWorld();
     this.products.forEach((p, i) => {
       const els = this.labelEls[i];
-      const { enter, exit } = s.phases[i];
-      const fade = 1 - smooth(exit * 1.8);
+      const { enter, split, exit } = s.phases[i];
+      const fade = (1 - smooth(exit * 1.8)) * smooth((split - 0.45) / 0.45);
       p.labels.forEach((l, k) => {
         const el = els[k];
         const o = p.root.visible ? THREE.MathUtils.clamp((enter - l.delay) / 0.12, 0, 1) * fade : 0;

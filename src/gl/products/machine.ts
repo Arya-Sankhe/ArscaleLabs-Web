@@ -17,8 +17,8 @@ function heat(x: number, y: number): number {
 }
 
 /**
- * 01 — Live machine analysis. Front: thermal signature. Middle: the asset
- * (motor, bearing, coupling, pump). Back: vibration and spectrum telemetry.
+ * 01 — Live machine analysis. Front: the asset (motor, bearing, coupling,
+ * pump). Middle: vibration and spectrum telemetry. Back: thermal signature.
  */
 export class MachineProduct extends Product {
   private readonly impeller: LiveLines;
@@ -30,14 +30,13 @@ export class MachineProduct extends Product {
     super();
     const s = this.sketch;
 
-    // Front plane: thermal contours.
-    this.frame(0);
+    // Back plane: thermal contours.
+    this.frame(2);
     s.contours('faint', heat, [-1.82, -1.22, 1.82, 1.22], range(0.12, 0.96, 0.07), [118, 80]);
     s.contours('base', heat, [-1.82, -1.22, 1.82, 1.22], [0.9, 1.0], [118, 80]);
 
-    // Middle plane: the asset.
-    this.frame(1);
-    s.z = Z[1];
+    // Front plane: the asset.
+    this.frame(0);
     s.rect('base', -1.62, -0.94, 1.78, -0.82, 0.02);
     for (const x of [-1.45, -0.55, 0.9, 1.65]) s.rect('faint', x - 0.08, -1.04, x + 0.08, -0.94, 0.01);
     s.rect('base', -1.5, -0.72, -0.2, 0.5, 0.12);
@@ -63,9 +62,8 @@ export class MachineProduct extends Product {
     s.poly('base', [[1.38, 0.43], [1.38, 0.7], [1.8, 0.7]]);
     s.brackets('strong', 0.04, -0.47, 0.46, 0.39, 0.09);
 
-    // Back plane: telemetry.
-    this.frame(2);
-    s.z = Z[2];
+    // Middle plane: telemetry.
+    this.frame(1);
     s.line('faint', -1.7, 0.55, 1.7, 0.55);
     s.line('dash', -1.7, 0.83, 1.7, 0.83);
     s.line('dash', -1.7, 0.27, 1.7, 0.27);
@@ -74,7 +72,7 @@ export class MachineProduct extends Product {
     s.text('faint', -1.7, 1.12, [0.42]);
     s.text('faint', -1.7, -0.08, [0.3]);
 
-    // Connectors: each hot spot threads through the asset to its signal.
+    // Connectors: each component threads back through its signal to its heat.
     for (const [x, y] of [MOTOR, BEARING, PUMP, [-0.4, 0.62] as [number, number]]) {
       s.connector(x, y, Z[0], Z[2] - 0.25, [Z[1], Z[2]]);
     }
@@ -86,14 +84,14 @@ export class MachineProduct extends Product {
     this.spectrum = this.live(48, 'base');
     this.pulse = this.live(40, 'base', true);
 
-    this.label('BRG-02', [0.04, 0.47, Z[1]], 0.55, { tone: 'bright' });
-    this.label('ANOMALY 0.87', [0.04, -0.6, Z[1]], 0.62);
-    this.label('VIB RMS 4.2 MM/S', [-1.7, 1.0, Z[2]], 0.6);
-    this.label('Δ +38% / 72H', [1.05, -0.2, Z[2]], 0.7);
+    this.label('BRG-02', [0.04, 0.47, Z[0]], 0.55, { tone: 'bright' });
+    this.label('ANOMALY 0.87', [0.04, -0.6, Z[0]], 0.62);
+    this.label('VIB RMS 4.2 MM/S', [-1.7, 1.0, Z[1]], 0.6);
+    this.label('Δ +38% / 72H', [1.05, -0.2, Z[1]], 0.7);
     this.label('1101', [MOTOR[0], MOTOR[1], Z[2] - 0.3], 0.8, { side: 'right' });
     this.label('0111', [BEARING[0], BEARING[1], Z[2] - 0.3], 0.84, { side: 'right' });
     this.label('0001', [PUMP[0], PUMP[1], Z[2] - 0.3], 0.88, { side: 'right' });
-    this.label('THERMAL', [-1.8, 1.08, Z[0]], 0.4);
+    this.label('THERMAL', [-1.8, 1.08, Z[2]], 0.4);
   }
 
   tick(t: number): void {
@@ -110,7 +108,7 @@ export class MachineProduct extends Product {
         const a = a0 + (k / 6) * 0.9;
         const nx = PUMP[0] + Math.cos(a) * r;
         const ny = PUMP[1] + Math.sin(a) * r;
-        im.seg(px, py, Z[1], nx, ny, Z[1]);
+        im.seg(px, py, Z[0], nx, ny, Z[0]);
         px = nx;
         py = ny;
       }
@@ -118,7 +116,7 @@ export class MachineProduct extends Product {
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2;
       const b = ((k + 1) / 16) * Math.PI * 2;
-      im.seg(PUMP[0] + Math.cos(a) * 0.08, PUMP[1] + Math.sin(a) * 0.08, Z[1], PUMP[0] + Math.cos(b) * 0.08, PUMP[1] + Math.sin(b) * 0.08, Z[1]);
+      im.seg(PUMP[0] + Math.cos(a) * 0.08, PUMP[1] + Math.sin(a) * 0.08, Z[0], PUMP[0] + Math.cos(b) * 0.08, PUMP[1] + Math.sin(b) * 0.08, Z[0]);
     }
     im.end();
 
@@ -136,7 +134,7 @@ export class MachineProduct extends Product {
         Math.sin(x * 9 - t * 3.2) * 0.07 +
         Math.sin(x * 23 + t * 5.1) * 0.03 +
         Math.sin(x * 71 - t * 9) * burst;
-      if (i > 0) w.seg(x - 3.4 / n, prev, Z[2], x, y, Z[2]);
+      if (i > 0) w.seg(x - 3.4 / n, prev, Z[1], x, y, Z[1]);
       prev = y;
     }
     w.end();
@@ -150,7 +148,7 @@ export class MachineProduct extends Product {
       const harm = 0.55 * gauss(f, 0, 0.12, 0, 0.02, 1) + 0.32 * gauss(f, 0, 0.24, 0, 0.02, 1) + 0.18 * gauss(f, 0, 0.36, 0, 0.02, 1);
       const fault = (0.5 + 0.15 * Math.sin(t * 1.6)) * gauss(f, 0, 0.66, 0, 0.025, 1);
       const floor = 0.05 + 0.03 * Math.sin(i * 1.7 + t * 2);
-      sp.seg(x, -1.05, Z[2], x, -1.05 + Math.min(0.9, floor + harm + fault), Z[2]);
+      sp.seg(x, -1.05, Z[1], x, -1.05 + Math.min(0.9, floor + harm + fault), Z[1]);
     }
     sp.end();
 
@@ -163,7 +161,7 @@ export class MachineProduct extends Product {
       const a = (k / 40) * Math.PI * 2;
       const b = ((k + 1) / 40) * Math.PI * 2;
       if (phase > 0.85) break;
-      p.seg(BEARING[0] + Math.cos(a) * r, BEARING[1] + Math.sin(a) * r, Z[0], BEARING[0] + Math.cos(b) * r, BEARING[1] + Math.sin(b) * r, Z[0]);
+      p.seg(BEARING[0] + Math.cos(a) * r, BEARING[1] + Math.sin(a) * r, Z[2], BEARING[0] + Math.cos(b) * r, BEARING[1] + Math.sin(b) * r, Z[2]);
     }
     p.end();
     p.fade = 1 - phase / 0.85;
