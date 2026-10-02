@@ -755,6 +755,11 @@ p {
   gap: var(--space-16);
   padding-bottom: 10px;
 }
+.footer__mails {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
 .footer__mail {
   font-family: var(--font-mono);
   font-size: var(--text-caption);
@@ -898,7 +903,8 @@ p {
   .card__art {
     aspect-ratio: 16 / 9;
   }
-  .footer__contact {
+  .footer__contact,
+  .footer__mails {
     justify-items: start;
   }
 }
